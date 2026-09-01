@@ -5,6 +5,8 @@ import 'package:printing/printing.dart';
 
 import '../models/student.dart';
 import '../models/student_year_result.dart';
+import 'academic_sequence_service.dart';
+import 'app_settings_service.dart';
 
 class AcademicSequencePdfService {
   static Future<Uint8List> generatePdf(
@@ -13,10 +15,11 @@ class AcademicSequencePdfService {
   ) async {
     final fontData = await rootBundle.load('assets/fonts/Amiri-Regular.ttf');
     final arabicFont = pw.Font.ttf(fontData);
+    final schoolName = await AppSettingsService.getSchoolName();
+    final documentTitle = await AppSettingsService.getSchoolHeader();
 
     final pdf = pw.Document();
-    final sortedResults = [...results]
-      ..sort((a, b) => a.academicYear.compareTo(b.academicYear));
+    final academicSequence = AcademicSequenceService.build(student, results);
 
     pdf.addPage(
       pw.Page(
@@ -30,7 +33,7 @@ class AcademicSequencePdfService {
                 crossAxisAlignment: pw.CrossAxisAlignment.stretch,
                 children: [
                   pw.Text(
-                    'أمانة المدرسة',
+                    schoolName,
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       font: arabicFont,
@@ -40,7 +43,7 @@ class AcademicSequencePdfService {
                   ),
                   pw.SizedBox(height: 10),
                   pw.Text(
-                    'وثيقة التسلسل الدراسي',
+                    documentTitle,
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       font: arabicFont,
@@ -98,13 +101,13 @@ class AcademicSequencePdfService {
                           _tableHeaderCell(arabicFont, 'القيمة الأصلية'),
                         ],
                       ),
-                      ...sortedResults.map(
-                        (result) => pw.TableRow(
+                      ...academicSequence.entries.map(
+                        (entry) => pw.TableRow(
                           children: [
-                            _tableCell(arabicFont, result.academicYear),
-                            _tableCell(arabicFont, result.section ?? 'غير محدد'),
-                            _tableCell(arabicFont, result.status ?? 'غير محدد'),
-                            _tableCell(arabicFont, result.rawValue),
+                            _tableCell(arabicFont, entry.academicYear),
+                            _tableCell(arabicFont, entry.section),
+                            _tableCell(arabicFont, entry.status),
+                            _tableCell(arabicFont, entry.rawValue),
                           ],
                         ),
                       ),
