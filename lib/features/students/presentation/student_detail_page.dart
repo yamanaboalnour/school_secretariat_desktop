@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../core/database/database_service.dart';
 import '../../../models/student.dart';
 import '../../../models/student_year_result.dart';
+import '../../../services/academic_sequence_pdf_service.dart';
+import 'academic_sequence_preview_page.dart';
 
 class StudentDetailPage extends StatefulWidget {
   const StudentDetailPage({super.key, required this.student});
@@ -33,13 +35,37 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
         title: const Text('تفاصيل الطالب'),
         actions: [
           TextButton.icon(
-            onPressed: () => _showAcademicPreview(context),
+            onPressed: () async {
+              final results = await _resultsFuture;
+              if (!context.mounted) return;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AcademicSequencePreviewPage(
+                    student: widget.student,
+                    results: results,
+                  ),
+                ),
+              );
+            },
             icon: const Icon(Icons.preview_outlined),
             label: const Text('معاينة التسلسل الدراسي'),
           ),
           const SizedBox(width: 8),
           TextButton.icon(
-            onPressed: () => _showPrintReadyMessage(context),
+            onPressed: () async {
+              try {
+                final results = await _resultsFuture;
+                await AcademicSequencePdfService.printPdf(
+                  widget.student,
+                  results,
+                );
+              } catch (error) {
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تعذر إنشاء PDF للطباعة: $error')),
+                );
+              }
+            },
             icon: const Icon(Icons.print_outlined),
             label: const Text('طباعة'),
           ),
@@ -116,144 +142,6 @@ class _StudentDetailPageState extends State<StudentDetailPage> {
     );
   }
 
-  void _showPrintReadyMessage(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('زر الطباعة جاهز للربط بالمرحلة التالية من PDF والطباعة.'),
-      ),
-    );
-  }
-
-  void _showAcademicPreview(BuildContext context) {
-    final results = _resultsFuture;
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(20),
-          child: SizedBox(
-            width: 1000,
-            height: 700,
-            child: FutureBuilder<List<StudentYearResult>>(
-              future: results,
-              builder: (context, snapshot) {
-                final previewResults = snapshot.data ?? const <StudentYearResult>[];
-
-                return Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'أمانة المدرسة',
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          Text(
-                            'معاينة التسلسل الدراسي',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'اسم الطالب: ${widget.student.fullName ?? widget.student.firstName ?? 'غير محدد'}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'الرقم العام: ${widget.student.generalId ?? 'غير محدد'}',
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                      const SizedBox(height: 20),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Table(
-                            border: TableBorder.all(color: Colors.grey.shade400),
-                            columnWidths: const {
-                              0: FlexColumnWidth(2),
-                              1: FlexColumnWidth(1.5),
-                              2: FlexColumnWidth(1.5),
-                              3: FlexColumnWidth(2.5),
-                            },
-                            children: [
-                              const TableRow(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text(
-                                      'العام الدراسي',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text(
-                                      'الصف',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text(
-                                      'الحالة',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text(
-                                      'القيمة الأصلية',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              ...previewResults.map(
-                                (result) => TableRow(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Text(result.academicYear),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Text(result.section ?? 'غير محدد'),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Text(result.status ?? 'غير محدد'),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Text(result.rawValue),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _StudentSummaryCard extends StatelessWidget {
