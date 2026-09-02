@@ -120,7 +120,7 @@ class DatabaseService {
       'students',
       where: where,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
-      orderBy: 'full_name ASC, id ASC',
+      orderBy: 'COALESCE(CAST(general_id AS INTEGER), 999999999) ASC, id ASC',
       limit: limit,
     );
 

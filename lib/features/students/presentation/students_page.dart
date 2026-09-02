@@ -23,17 +23,17 @@ class _StudentsPageState extends State<StudentsPage> {
   @override
   void initState() {
     super.initState();
-    _studentsFuture = _databaseService.getStudents(limit: 400);
+    _studentsFuture = _databaseService.getStudents(limit: 500);
   }
 
   void _refreshStudents() {
     _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
+    _debounce = Timer(const Duration(milliseconds: 250), () {
       if (!mounted) return;
       setState(() {
         _studentsFuture = _databaseService.getStudents(
           search: _searchController.text,
-          limit: 400,
+          limit: 500,
         );
       });
     });
@@ -53,35 +53,44 @@ class _StudentsPageState extends State<StudentsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  textDirection: TextDirection.rtl,
-                  decoration: InputDecoration(
-                    hintText: 'ابحث بالاسم، الكنية، الرقم العام، أو الرقم الوطني',
-                    prefixIcon: const Icon(Icons.search_outlined),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    textDirection: TextDirection.rtl,
+                    decoration: InputDecoration(
+                      hintText: 'ابحث بالاسم، الكنية، الرقم العام أو الرقم الوطني',
+                      hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                      prefixIcon: const Icon(Icons.search_outlined),
+                      filled: true,
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
+                    onChanged: (_) => _refreshStudents(),
                   ),
-                  onChanged: (_) => _refreshStudents(),
                 ),
-              ),
-              const SizedBox(width: 16),
-              MouseRegion(
-                cursor: SystemMouseCursors.click,
-                child: ElevatedButton.icon(
-                  onPressed: _refreshStudents,
-                  icon: const Icon(Icons.refresh_outlined),
-                  label: const Text('تحديث'),
+                const SizedBox(width: 12),
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: ElevatedButton.icon(
+                    onPressed: _refreshStudents,
+                    icon: const Icon(Icons.refresh_outlined),
+                    label: const Text('تحديث'),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -134,6 +143,7 @@ class _StudentsPageState extends State<StudentsPage> {
                         rows: students
                             .map(
                               (student) => DataRow(
+                                mouseCursor: WidgetStateMouseCursor.clickable,
                                 onSelectChanged: (_) {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
