@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../../services/app_settings_service.dart';
 import '../../../services/student_import_service.dart';
 
 class ImportPage extends StatefulWidget {
@@ -57,6 +58,8 @@ class _ImportPageState extends State<ImportPage> {
         studentsCsvPath: _studentsPath!,
         resultsCsvPath: _resultsPath!,
       );
+
+      await AppSettingsService.setImportCompleted(true);
 
       setState(() {
         _summary = summary;

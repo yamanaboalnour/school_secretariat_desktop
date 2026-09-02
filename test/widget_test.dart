@@ -12,8 +12,10 @@ import 'package:school_secretariat_desktop/main.dart';
 void main() {
   testWidgets('app loads with arabic desktop layout', (WidgetTester tester) async {
     await tester.pumpWidget(const SchoolSecretariatApp());
+    await tester.pump(const Duration(milliseconds: 1800));
+    await tester.pump();
 
-    expect(find.text('أمانة المدرسة'), findsOneWidget);
+    expect(find.text('تطبيق أمانة السر'), findsWidgets);
     expect(find.text('الرئيسية'), findsWidgets);
   });
 }

@@ -42,6 +42,14 @@ class DatabaseService {
     );
   }
 
+  Future<bool> hasImportedData() async {
+    final db = await database;
+    final totalStudents = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM students'),
+    );
+    return (totalStudents ?? 0) > 0;
+  }
+
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE students (
@@ -89,14 +97,14 @@ class DatabaseService {
     );
   }
 
-  Future<List<Student>> getStudents({String? search}) async {
+  Future<List<Student>> getStudents({String? search, int limit = 400}) async {
     final db = await database;
 
     String? where;
     List<Object?> whereArgs = [];
 
     if (search != null && search.trim().isNotEmpty) {
-      final query = '%${search.trim()}%';
+      final query = '%${search.trim().toLowerCase()}%';
       where = '''
         LOWER(COALESCE(first_name, '')) LIKE ? OR
         LOWER(COALESCE(last_name, '')) LIKE ? OR
@@ -113,6 +121,7 @@ class DatabaseService {
       where: where,
       whereArgs: whereArgs.isEmpty ? null : whereArgs,
       orderBy: 'full_name ASC, id ASC',
+      limit: limit,
     );
 
     return rows.map((row) => Student.fromMap(row)).toList();

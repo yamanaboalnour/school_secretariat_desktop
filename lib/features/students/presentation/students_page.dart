@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/database/database_service.dart';
@@ -14,25 +16,32 @@ class StudentsPage extends StatefulWidget {
 class _StudentsPageState extends State<StudentsPage> {
   final DatabaseService _databaseService = DatabaseService();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
 
   late Future<List<Student>> _studentsFuture;
 
   @override
   void initState() {
     super.initState();
-    _studentsFuture = _databaseService.getStudents();
+    _studentsFuture = _databaseService.getStudents(limit: 400);
   }
 
   void _refreshStudents() {
-    setState(() {
-      _studentsFuture = _databaseService.getStudents(
-        search: _searchController.text,
-      );
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      setState(() {
+        _studentsFuture = _databaseService.getStudents(
+          search: _searchController.text,
+          limit: 400,
+        );
+      });
     });
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -64,10 +73,13 @@ class _StudentsPageState extends State<StudentsPage> {
                 ),
               ),
               const SizedBox(width: 16),
-              ElevatedButton.icon(
-                onPressed: _refreshStudents,
-                icon: const Icon(Icons.refresh_outlined),
-                label: const Text('تحديث'),
+              MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: ElevatedButton.icon(
+                  onPressed: _refreshStudents,
+                  icon: const Icon(Icons.refresh_outlined),
+                  label: const Text('تحديث'),
+                ),
               ),
             ],
           ),

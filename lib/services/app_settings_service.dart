@@ -5,6 +5,7 @@ class AppSettingsService {
 
   static const String schoolNameKey = 'school_name';
   static const String schoolHeaderKey = 'school_header';
+  static const String importCompletedKey = 'import_completed';
 
   static Future<String> getSchoolName() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,5 +25,15 @@ class AppSettingsService {
   static Future<void> saveSchoolHeader(String value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(schoolHeaderKey, value.trim().isEmpty ? 'وثيقة التسلسل الدراسي' : value.trim());
+  }
+
+  static Future<bool> getImportCompleted() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(importCompletedKey) ?? false;
+  }
+
+  static Future<void> setImportCompleted(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(importCompletedKey, value);
   }
 }
